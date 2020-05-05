@@ -1,0 +1,11 @@
+dbconfig:
+  name: "InvestmentHelper"
+  collection: "History"
+  server: "mongodb://127.0.0.1:27017"
+
+ventagekey: "RFQVPDIH6W9SQV2O"
+
+pageserver: "http://localhost:63356"
+
+localport: "8090"
+
