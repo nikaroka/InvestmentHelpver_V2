@@ -1,8 +1,8 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Sample API",
-    "description": "API description in Markdown.",
+    "title": "InvestmentHelper",
+    "description": "InvestmentHelper API",
     "version": "1.0.0"
   },
   "host": "api.example.com",
