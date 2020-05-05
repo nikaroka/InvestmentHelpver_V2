@@ -1,0 +1,198 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Sample API",
+    "description": "API description in Markdown.",
+    "version": "1.0.0"
+  },
+  "host": "api.example.com",
+  "basePath": "/v1",
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/{symbolName}, {userName}, Plot": {
+      "get": {
+        "summary": "Returns an information for Candlestick chart.",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Username of sender"
+          },
+          {
+            "name": "symbolName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Stock Symbol of company you want to search"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of Candlesticks.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "date": {
+                  "type": "string",
+                  "example": "2020-05-12"
+                },
+                "open": {
+                  "type": "string",
+                  "example": "51.5"
+                },
+                "close": {
+                  "type": "string",
+                  "example": "51.5"
+                },
+                "High": {
+                  "type": "string",
+                  "example": "51.5"
+                },
+                "Low": {
+                  "type": "string",
+                  "example": "51.5"
+                },
+                "Volume": {
+                  "type": "string",
+                  "example": "51.5"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/{symbolName}, {userName}, News": {
+      "get": {
+        "summary": "Returns news and links.",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Username of sender"
+          },
+          {
+            "name": "symbolName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Stock Symbol of company you want to search"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of news.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "example": "Trump won elections"
+                },
+                "link": {
+                  "type": "string",
+                  "example": "https://examplenews.com"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/{symbolName}, {userName}, writeDB": {
+      "get": {
+        "summary": "write information about user request into database.",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Username of sender"
+          },
+          {
+            "name": "symbolName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Stock Symbol of company you want to search"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/{symbolName}, {userName}, readDB": {
+      "get": {
+        "summary": "return information about user requests.",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Username of sender"
+          },
+          {
+            "name": "symbolName",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "Stock Symbol of company you want to search"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "List of news.",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userID": {
+                  "type": "string",
+                  "example": "User1"
+                },
+                "stockKey": {
+                  "type": "string",
+                  "example": "IBM"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Error"
+          }
+        }
+      }
+    }
+  }
+}
