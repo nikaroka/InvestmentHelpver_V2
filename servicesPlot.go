@@ -13,16 +13,33 @@ import (
 )
 
 type Day struct {
-	Date time.Time
-	Open float64
-	High float64
-	Low float64
-	Close float64
+	Date   time.Time
+	Open   float64
+	High   float64
+	Low    float64
+	Close  float64
 	Volume int
 }
 
-func GetDailyDataShort (symbol string, key string) (string, error) {
-	req := fmt.Sprintf("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s",symbol,key)
+type PlotManagerAlphaVantage struct {
+	apiKey string
+}
+
+func (plotManager PlotManagerAlphaVantage) GetPlot(symbol string) ([]Day, error) {
+	apiKey := plotManager.apiKey
+	body, err := GetPlotJson(symbol, apiKey)
+	if err != nil {
+		return nil, err
+	}
+	plot, err := ScrapJsonBody(body)
+	if err != nil {
+		return nil, err
+	}
+	return plot, nil
+}
+
+func GetPlotJson(symbol string, key string) (string, error) {
+	req := fmt.Sprintf("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s", symbol, key)
 	resp, err := http.Get(req)
 	if err != nil {
 		return "", err
@@ -32,19 +49,20 @@ func GetDailyDataShort (symbol string, key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if strings.Index(string(body), "Note") != -1{
+
+	if strings.Index(string(body), "Note") != -1 {
 		err = errors.New("exceedApiFrequency")
+		return "", err
+	}
+
+	if strings.Index(string(body), "Invalid API call") != -1 {
+		err = errors.New("wrongSymbolApiCall")
 		return "", err
 	}
 	return string(body), err
 }
 
-func GetFloatValue (valueI interface{}) float64 {
-	valueF, _ := strconv.ParseFloat(valueI.(string), 64)
-	return valueF
-}
-
-func ScrapJsonBody (body string) ([]Day, error){
+func ScrapJsonBody(body string) ([]Day, error) {
 	byt := []byte(body)
 	var days []Day
 	var dat map[string]interface{}
@@ -53,7 +71,7 @@ func ScrapJsonBody (body string) ([]Day, error){
 		return nil, err
 	}
 	dailyTimeSeries := dat["Time Series (Daily)"].(map[string]interface{})
-	for key := range dailyTimeSeries{
+	for key := range dailyTimeSeries {
 		date, err := time.Parse("2006-01-02", key)
 		if err != nil {
 			return nil, err
@@ -73,27 +91,11 @@ func ScrapJsonBody (body string) ([]Day, error){
 		}
 		days = append(days, day)
 	}
-	sort.Slice(days, func(i, j int) bool { return days[i].Date.Before(days[j].Date )})
+	sort.Slice(days, func(i, j int) bool { return days[i].Date.Before(days[j].Date) })
 	return days, nil
-	}
+}
 
-func requestHandlerPlot(r *http.Request, plotChannel chan []byte, errChannel chan error) {
-	symbol := strings.Split(r.URL.Path[1:], ";")[0]
-	apiKey := loadConfig().VentageKey
-	body, err := GetDailyDataShort(symbol, apiKey)
-	if err != nil {
-		errChannel <- err
-		return
-	}
-	plot, err := ScrapJsonBody(body)
-	if err != nil {
-		errChannel <- err
-		return
-	}
-	jsonPlot, err := json.Marshal(plot)
-	if err != nil {
-		errChannel <- err
-		return
-	}
-	plotChannel <- jsonPlot
+func GetFloatValue(valueI interface{}) float64 {
+	valueF, _ := strconv.ParseFloat(valueI.(string), 64)
+	return valueF
 }

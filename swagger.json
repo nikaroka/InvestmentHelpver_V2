@@ -11,7 +11,7 @@
     "http"
   ],
   "paths": {
-    "/{symbolName}, {userName}, Plot": {
+    "/plot?symbol='symbolName'": {
       "get": {
         "summary": "Returns an information for Candlestick chart.",
         "parameters": [
@@ -72,7 +72,7 @@
         }
       }
     },
-    "/{symbolName}, {userName}, News": {
+    "/news?symbol='symbolName'": {
       "get": {
         "summary": "Returns news and links.",
         "parameters": [
@@ -117,7 +117,7 @@
         }
       }
     },
-    "/{symbolName}, {userName}, writeDB": {
+    "/writedb?symbol='symbolName'&user='userName'": {
       "get": {
         "summary": "write information about user request into database.",
         "parameters": [
@@ -149,7 +149,7 @@
         }
       }
     },
-    "/{symbolName}, {userName}, readDB": {
+    "/readedb?user='userName'": {
       "get": {
         "summary": "return information about user requests.",
         "parameters": [

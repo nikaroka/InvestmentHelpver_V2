@@ -1,38 +1,57 @@
 package main
 
 import (
-	"strings"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
-func TestGetDailyDataShort (t *testing.T)  {
-	apiKey := loadConfig().VentageKey
-	body, err := GetDailyDataShort("IBM", apiKey)
-	if strings.Index(body, "Invalid API call") != -1 {
-		t.Error("zero len body")
-	}
+func TestGetPlotAlphaVantage(t *testing.T) {
+	testSymbolReal := "IBM"
+	testSymbolUnreal := "unrealSymbol"
+	apiKey := loadConfig().VentageKeyTest
+	plotManagerTest := PlotManagerAlphaVantage{apiKey}
+	server := InvestmentServer{nil, plotManagerTest, nil}
 
-	if err != nil {
-		t.Error(err)
-	}
+	t.Run(fmt.Sprintf("test real stock symbol:%s", testSymbolReal), func(t *testing.T) {
+		plot, err := plotManagerTest.GetPlot(testSymbolReal)
+		if err != nil {
+			t.Error(err)
+		}
+		if len(plot) == 0 {
+			t.Error("empty plot")
+		}
+	})
 
-	body, err = GetDailyDataShort("testKey", apiKey)
-	if strings.Index(body, "Invalid API call") == -1 {
-		t.Error("find testKey body")
-	}
+	t.Run(fmt.Sprintf("test unreal stock symbol:%s", testSymbolUnreal), func(t *testing.T) {
+		plot, err := plotManagerTest.GetPlot(testSymbolUnreal)
+		if err == nil {
+			t.Error(err)
+		}
+		if len(plot) != 0 {
+			t.Error("not empty plot")
+		}
+	})
+
+	t.Run(fmt.Sprintf("test response 200"), func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/plot?symbol=%s", testSymbolReal), nil)
+		response := httptest.NewRecorder()
+		server.PlotHandler(request, response)
+		wantCode := 200
+		if response.Code != wantCode {
+			t.Error(fmt.Sprintf("wrong response code, want %d, get %d", wantCode, response.Code))
+		}
+	})
+
+	t.Run(fmt.Sprintf("test response 500"), func(t *testing.T) {
+		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/plot?symbol=%s", testSymbolUnreal), nil)
+		response := httptest.NewRecorder()
+		server.PlotHandler(request, response)
+		wantCode := 500
+		if response.Code != wantCode {
+			t.Error(fmt.Sprintf("wrong response code, want %d, get %d", wantCode, response.Code))
+		}
+	})
+
 }
-
-func TestScrapJsonBody (t *testing.T)  {
-	apiKey := loadConfig().VentageKey
-	body, _ := GetDailyDataShort("IBM", apiKey)
-	days, err := ScrapJsonBody(body)
-	if err != nil {
-		t.Error(err)
-	}
-
-	if days == nil {
-		t.Error("nil days")
-	}
-}
-
-

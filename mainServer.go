@@ -1,20 +1,22 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/jinzhu/configor"
 	"net/http"
-	"strings"
 )
 
 type Config struct {
 	DBConfig struct {
-		Name       string `default:"dbName"`
-		Collection string `default:"dbCollection"`
-		Server     string `default:"dbServer"`
+		Name           string `default:"dbName"`
+		Collection     string `default:"dbCollection"`
+		CollectionTest string `default:"dbCollectionTest"`
+		Server         string `default:"dbServer"`
 	}
-	VentageKey string `default:"dbName"`
-	PageServer string `default:"localhost"`
-	LocalPort  string `default:"8888"`
+	VentageKey     string `default:"key"`
+	VentageKeyTest string `default:"keytest"`
+	PageServer     string `default:"localhost"`
+	LocalPort      string `default:"8888"`
 }
 
 func loadConfig() Config {
@@ -23,44 +25,105 @@ func loadConfig() Config {
 	return config
 }
 
-func sendToSite(w http.ResponseWriter, jsn []byte) {
+type InvestmentServer struct {
+	newsManager NewsManager
+	plotManager PlotManager
+	dbManager   DBManager
+}
+
+type NewsManager interface {
+	GetNews(string) ([]News, error)
+}
+type PlotManager interface {
+	GetPlot(string) ([]Day, error)
+}
+type DBManager interface {
+	GetHistory(string) ([]UserRequest, error)
+	AddHistory(string, string) error
+}
+
+func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWriter) {
 	pageServer := loadConfig().PageServer
-	if jsn != nil {
-		w.Header().Set("Content-Type", "application/json")
+	//symbol := strings.Split(r.URL.Path[1:], ";")[0]
+	symbol := r.URL.Query()["symbol"][0]
+	news, err := server.newsManager.GetNews(symbol)
+	if err != nil {
 		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusOK)
-		w.Write(jsn)
-	} else {
-		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+	jsonNews, err := json.Marshal(news)
+	if err != nil {
+		w.Header().Set("Access-Control-Allow-Origin", pageServer)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", pageServer)
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonNews)
+}
+
+func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWriter) {
+	pageServer := loadConfig().PageServer
+	symbol := r.URL.Query()["symbol"][0]
+	plot, err := server.plotManager.GetPlot(symbol)
+	if err != nil {
+		w.Header().Set("Access-Control-Allow-Origin", pageServer)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	jsonPlot, err := json.Marshal(plot)
+	if err != nil {
+		w.Header().Set("Access-Control-Allow-Origin", pageServer)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", pageServer)
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonPlot)
+}
+
+func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter) {
+	pageServer := loadConfig().PageServer
+	user := r.URL.Query()["user"][0]
+	symbol := r.URL.Query()["symbol"][0]
+	err := server.dbManager.AddHistory(user, symbol)
+	if err != nil {
+		w.Header().Set("Access-Control-Allow-Origin", pageServer)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Access-Control-Allow-Origin", pageServer)
+	w.WriteHeader(http.StatusOK)
 }
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
-	command := strings.Split(r.URL.Path[1:], ";")[2]
-	resultChannel := make(chan []byte)
-	errChannel := make(chan error)
-
-	switch {
-	case command == "readDB":
-		go requestHandlerReadDB(r, resultChannel, errChannel)
-	case command == "news":
-		go requestHandlerNews(r, resultChannel, errChannel)
-	case command == "plot":
-		go requestHandlerPlot(r, resultChannel, errChannel)
-	case command == "writeDB":
-		go requestHandlerWriteDB(r, resultChannel, errChannel)
-	default:
-		sendToSite(w, nil)
-		return
-	}
-
-	select {
-	case result := <-resultChannel:
-		sendToSite(w, result)
-	case <-errChannel:
-		sendToSite(w, nil)
-	}
+	//command := strings.Split(r.URL.Path[1:], ";")[2]
+	//resultChannel := make(chan []byte)
+	//errChannel := make(chan error)
+	//
+	//switch {
+	//case command == "readDB":
+	//	go requestHandlerReadDB(r, resultChannel, errChannel)
+	//case command == "news":
+	//	go requestHandlerNews(r, resultChannel, errChannel)
+	//case command == "plot":
+	//	go requestHandlerPlot(r, resultChannel, errChannel)
+	//case command == "writeDB":
+	//	go requestHandlerWriteDB(r, resultChannel, errChannel)
+	//default:
+	//	sendToSite(w, nil)
+	//	return
+	//}
+	//
+	//select {
+	//case result := <-resultChannel:
+	//	sendToSite(w, result)
+	//case <-errChannel:
+	//	sendToSite(w, nil)
+	//}
 }
 
 func main() {
