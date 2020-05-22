@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/jinzhu/configor"
 	"net/http"
 )
@@ -99,31 +100,29 @@ func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter
 	w.WriteHeader(http.StatusOK)
 }
 
+var newsManager = NewsManagerYahoo{}
+var plotManager = PlotManagerAlphaVantage{apiKey: loadConfig().VentageKey}
+var dbManager = DBManagerMongo{dbName: loadConfig().DBConfig.Name,
+	collectionName: loadConfig().DBConfig.Collection,
+	dbServer:       loadConfig().DBConfig.Server}
+var server = InvestmentServer{newsManager, plotManager, dbManager}
+
 func mainHandler(w http.ResponseWriter, r *http.Request) {
-	//command := strings.Split(r.URL.Path[1:], ";")[2]
-	//resultChannel := make(chan []byte)
-	//errChannel := make(chan error)
-	//
-	//switch {
-	//case command == "readDB":
-	//	go requestHandlerReadDB(r, resultChannel, errChannel)
-	//case command == "news":
-	//	go requestHandlerNews(r, resultChannel, errChannel)
-	//case command == "plot":
-	//	go requestHandlerPlot(r, resultChannel, errChannel)
-	//case command == "writeDB":
-	//	go requestHandlerWriteDB(r, resultChannel, errChannel)
-	//default:
-	//	sendToSite(w, nil)
-	//	return
-	//}
-	//
-	//select {
-	//case result := <-resultChannel:
-	//	sendToSite(w, result)
-	//case <-errChannel:
-	//	sendToSite(w, nil)
-	//}
+	command := r.URL.EscapedPath()
+	switch {
+	case command == "/db":
+		fmt.Println("db")
+		server.DBHandler(r, w)
+	case command == "/news":
+		fmt.Println("news")
+		server.NewsHandler(r, w)
+	case command == "/plot":
+		fmt.Println("plot")
+		server.PlotHandler(r, w)
+		//default:
+		//	sendToSite(w, nil)
+		//	return
+	}
 }
 
 func main() {
