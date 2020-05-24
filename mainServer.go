@@ -16,7 +16,6 @@ type Config struct {
 	}
 	VentageKey     string `default:"key"`
 	VentageKeyTest string `default:"keytest"`
-	PageServer     string `default:"localhost"`
 	LocalPort      string `default:"8888"`
 }
 
@@ -44,20 +43,20 @@ type DBManager interface {
 }
 
 func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWriter) {
-	pageServer := loadConfig().PageServer
-	//symbol := strings.Split(r.URL.Path[1:], ";")[0]
 	symbol := r.URL.Query()["symbol"][0]
 	news, err := server.newsManager.GetNews(symbol)
 	if err != nil {
-		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusInternalServerError)
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
 	}
 	jsonNews, err := json.Marshal(news)
 	if err != nil {
-		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusInternalServerError)
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
+	}
+	pageServer := ""
+	if origin, ok := r.Header["Origin"]; ok == true {
+		pageServer = origin[0]
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
@@ -66,19 +65,20 @@ func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWrit
 }
 
 func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWriter) {
-	pageServer := loadConfig().PageServer
 	symbol := r.URL.Query()["symbol"][0]
 	plot, err := server.plotManager.GetPlot(symbol)
 	if err != nil {
-		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusInternalServerError)
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
 	}
 	jsonPlot, err := json.Marshal(plot)
 	if err != nil {
-		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusInternalServerError)
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
+	}
+	pageServer := ""
+	if origin, ok := r.Header["Origin"]; ok == true {
+		pageServer = origin[0]
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
@@ -87,17 +87,28 @@ func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWrit
 }
 
 func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter) {
-	pageServer := loadConfig().PageServer
 	user := r.URL.Query()["user"][0]
 	symbol := r.URL.Query()["symbol"][0]
 	err := server.dbManager.AddHistory(user, symbol)
 	if err != nil {
-		w.Header().Set("Access-Control-Allow-Origin", pageServer)
-		w.WriteHeader(http.StatusInternalServerError)
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
+	}
+	pageServer := ""
+	if origin, ok := r.Header["Origin"]; ok == true {
+		pageServer = origin[0]
 	}
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
 	w.WriteHeader(http.StatusOK)
+}
+
+func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w http.ResponseWriter) {
+	pageServer := ""
+	if origin, ok := r.Header["Origin"]; ok == true {
+		pageServer = origin[0]
+	}
+	w.Header().Set("Access-Control-Allow-Origin", pageServer)
+	w.WriteHeader(httpStatus)
 }
 
 var newsManager = NewsManagerYahoo{}
@@ -119,13 +130,14 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	case command == "/plot":
 		fmt.Println("plot")
 		server.PlotHandler(r, w)
-		//default:
-		//	sendToSite(w, nil)
-		//	return
+	default:
+		fmt.Println("wrong command")
+		server.ErrorHandler(http.StatusBadRequest, r, w)
 	}
 }
 
 func main() {
+	fmt.Println("GO")
 	localPort := ":" + loadConfig().LocalPort
 	http.HandleFunc("/", mainHandler)
 	http.ListenAndServe(localPort, nil)
