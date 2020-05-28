@@ -49,19 +49,7 @@ func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWrit
 		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
 	}
-	jsonNews, err := json.Marshal(news)
-	if err != nil {
-		server.ErrorHandler(http.StatusInternalServerError, r, w)
-		return
-	}
-	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
-		pageServer = origin[0]
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", pageServer)
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonNews)
+	server.SendResponseToSite(news, r, w)
 }
 
 func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWriter) {
@@ -71,19 +59,7 @@ func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWrit
 		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
 	}
-	jsonPlot, err := json.Marshal(plot)
-	if err != nil {
-		server.ErrorHandler(http.StatusInternalServerError, r, w)
-		return
-	}
-	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
-		pageServer = origin[0]
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", pageServer)
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonPlot)
+	server.SendResponseToSite(plot, r, w)
 }
 
 func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter) {
@@ -94,12 +70,7 @@ func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter
 		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
 	}
-	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
-		pageServer = origin[0]
-	}
-	w.Header().Set("Access-Control-Allow-Origin", pageServer)
-	w.WriteHeader(http.StatusOK)
+	server.SendResponseToSite(nil, r, w)
 }
 
 func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w http.ResponseWriter) {
@@ -109,6 +80,24 @@ func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w 
 	}
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
 	w.WriteHeader(httpStatus)
+}
+
+func (server *InvestmentServer) SendResponseToSite(responseData interface{}, r *http.Request, w http.ResponseWriter) {
+	pageServer := ""
+	if origin, ok := r.Header["Origin"]; ok == true {
+		pageServer = origin[0]
+	}
+	w.Header().Set("Access-Control-Allow-Origin", pageServer)
+	w.WriteHeader(http.StatusOK)
+	if responseData != nil {
+		jsonData, err := json.Marshal(responseData)
+		if err != nil {
+			server.ErrorHandler(http.StatusInternalServerError, r, w)
+			return
+		}
+		w.Write(jsonData)
+		w.Header().Set("Content-Type", "application/json")
+	}
 }
 
 var newsManager = NewsManagerYahoo{}

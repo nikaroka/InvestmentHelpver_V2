@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -54,6 +55,10 @@ func (dbManager DBManagerMongo) AddHistory(userID string, stockKey string) error
 	if err != nil {
 		return err
 	}
+	us, err := dbManager.GetHistory(userID)
+	fmt.Println("hi")
+	fmt.Println(err)
+	fmt.Println(us)
 	return nil
 }
 
@@ -89,38 +94,3 @@ func deleteMongoCollection(dbName string, collectionName string, mongoServer str
 	}
 	return nil
 }
-
-//func requestHandlerReadDB(r *http.Request, dbChannel chan []byte, errChannel chan error) {
-//	userId := strings.Split(r.URL.Path[1:], ";")[1]
-//	dbConfig := loadConfig().DBConfig
-//	dbName, collectionName, mongoServer := dbConfig.Name, dbConfig.Collection, dbConfig.Server
-//	userRequests, err := GetHistory(dbName, collectionName, mongoServer, userId)
-//	if err != nil {
-//		errChannel <- err
-//		return
-//	}
-//	jsonDB, err := json.Marshal(userRequests)
-//	if err != nil {
-//		errChannel <- err
-//		return
-//	}
-//	dbChannel <- jsonDB
-//}
-//
-//func requestHandlerWriteDB(r *http.Request, dbChannel chan []byte, errChannel chan error) {
-//	symbol := strings.Split(r.URL.Path[1:], ";")[0]
-//	userId := strings.Split(r.URL.Path[1:], ";")[1]
-//	dbConfig := loadConfig().DBConfig
-//	dbName, collectionName, mongoServer := dbConfig.Name, dbConfig.Collection, dbConfig.Server
-//	err := AddHistory(userId, symbol, dbName, collectionName, mongoServer)
-//	if err != nil {
-//		errChannel <- err
-//		return
-//	}
-//	jsonDB, err := json.Marshal("")
-//	if err != nil {
-//		errChannel <- err
-//		return
-//	}
-//	dbChannel <- jsonDB
-//}
