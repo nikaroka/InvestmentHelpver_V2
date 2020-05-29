@@ -8,14 +8,11 @@ import (
 	"strings"
 )
 
-type News struct {
-	Headline string
-	Link     string
-}
-
+//Реализация интерфейса NewsManager, работает с сайтом https://finance.yahoo.com
 type NewsManagerYahoo struct {
 }
 
+//Метод структуры NewsManagerYahoo, принимает символ финансового актива, возвращает список экземпляров структуры News
 func (newsManager NewsManagerYahoo) GetNews(symbol string) ([]News, error) {
 	url := fmt.Sprintf("https://finance.yahoo.com/quote/%s/news?p=%s", symbol, symbol)
 	resp, err := http.Get(url)
@@ -32,7 +29,9 @@ func (newsManager NewsManagerYahoo) GetNews(symbol string) ([]News, error) {
 		if isBox == true {
 			headline := selection.Text()
 			link, _ := selection.Attr("href")
-			link = NormalizeLink(link)
+			if strings.Index(link, "http") == -1 {
+				link = "https://finance.yahoo.com" + link
+			}
 			news = append(news, News{headline, link})
 		}
 	})
@@ -41,11 +40,4 @@ func (newsManager NewsManagerYahoo) GetNews(symbol string) ([]News, error) {
 		return nil, err
 	}
 	return news, err
-}
-
-func NormalizeLink(link string) string {
-	if strings.Index(link, "http") == -1 {
-		link = "https://finance.yahoo.com" + link
-	}
-	return link
 }

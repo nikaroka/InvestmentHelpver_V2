@@ -2,23 +2,20 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type UserRequest struct {
-	UserID   string `bson:"userID,omitempty"`
-	StockKey string `bson:"stockKey,omitempty"`
-}
-
+//Реализация интерфейса DBManager, отвечает за работу с MonboDB, имеет параметры
+//dbName - имя базы данных, collectionName - имя колекции, dbServer - сервер базы данных
 type DBManagerMongo struct {
 	dbName         string
 	collectionName string
 	dbServer       string
 }
 
+//Метод структуры DBManagerMongo, принимает ID пользователя, возвращает список экземпляров структуры UserRequest
 func (dbManager DBManagerMongo) GetHistory(userID string) ([]UserRequest, error) {
 	var userRequests []UserRequest
 	dbName, collectionName, dbServer := dbManager.dbName, dbManager.collectionName, dbManager.dbServer
@@ -43,25 +40,23 @@ func (dbManager DBManagerMongo) GetHistory(userID string) ([]UserRequest, error)
 	return userRequests, nil
 }
 
-func (dbManager DBManagerMongo) AddHistory(userID string, stockKey string) error {
+//Метод структуры DBManagerMongo, принимает ID пользователя и символ финансового актива, возвращает ошибку если она есть
+func (dbManager DBManagerMongo) AddHistory(userID string, symbol string) error {
 	dbName, collectionName, dbServer := dbManager.dbName, dbManager.collectionName, dbManager.dbServer
 	collection, client, err := GetCollection(dbName, collectionName, dbServer)
 	if err != nil {
 		return err
 	}
 	defer client.Disconnect(context.TODO())
-	userReq := UserRequest{userID, stockKey}
+	userReq := UserRequest{userID, symbol}
 	_, err = collection.InsertOne(context.TODO(), userReq)
 	if err != nil {
 		return err
 	}
-	us, err := dbManager.GetHistory(userID)
-	fmt.Println("hi")
-	fmt.Println(err)
-	fmt.Println(us)
 	return nil
 }
 
+//Вспомогательный метод возвращаюий указатели на mongo.Collection и mongo.Сlient
 func GetCollection(dbName string, collectionName string, mongoServer string) (*mongo.Collection, *mongo.Client, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(mongoServer))
 
@@ -82,6 +77,7 @@ func GetCollection(dbName string, collectionName string, mongoServer string) (*m
 	return collection, client, nil
 }
 
+//Метод удаляющий коллекцию, сейчас используется для удаление тестовой коллекции после прохождения тестов
 func deleteMongoCollection(dbName string, collectionName string, mongoServer string) error {
 	collection, client, err := GetCollection(dbName, collectionName, mongoServer)
 	if err != nil {

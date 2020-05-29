@@ -12,20 +12,13 @@ import (
 	"time"
 )
 
-type Day struct {
-	Date   time.Time
-	Open   float64
-	High   float64
-	Low    float64
-	Close  float64
-	Volume int
-}
-
+//Реализация интерфейса PlotManager, имеет параметр apiKey являющийся клюом к API Alpha Ventage
 type PlotManagerAlphaVantage struct {
 	apiKey string
 }
 
-func (plotManager PlotManagerAlphaVantage) GetPlot(symbol string) ([]Day, error) {
+//Метод структуры PlotManagerAlphaVantage, принимает символ финансового актива, возвращает список экземпляров структуры Candle
+func (plotManager PlotManagerAlphaVantage) GetPlot(symbol string) ([]Candle, error) {
 	apiKey := plotManager.apiKey
 	body, err := GetPlotJson(symbol, apiKey)
 	if err != nil {
@@ -38,8 +31,9 @@ func (plotManager PlotManagerAlphaVantage) GetPlot(symbol string) ([]Day, error)
 	return plot, nil
 }
 
-func GetPlotJson(symbol string, key string) (string, error) {
-	req := fmt.Sprintf("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s", symbol, key)
+//Метод принимающий символ финансового актива и ключ API, производит запроса на Alpha Ventage и возвращает тело ответа
+func GetPlotJson(symbol string, apiKey string) (string, error) {
+	req := fmt.Sprintf("https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=%s&apikey=%s", symbol, apiKey)
 	resp, err := http.Get(req)
 	if err != nil {
 		return "", err
@@ -62,31 +56,32 @@ func GetPlotJson(symbol string, key string) (string, error) {
 	return string(body), err
 }
 
-func ScrapJsonBody(body string) ([]Day, error) {
+//Метод принимающий в себя тело ответа из функции GetPlotJson и превращающий его в список структуры Candle
+func ScrapJsonBody(body string) ([]Candle, error) {
 	byt := []byte(body)
-	var days []Day
+	var days []Candle
 	var dat map[string]interface{}
 	err := json.Unmarshal(byt, &dat)
 	if err != nil {
 		return nil, err
 	}
 	dailyTimeSeries := dat["Time Series (Daily)"].(map[string]interface{})
-	for key := range dailyTimeSeries {
-		date, err := time.Parse("2006-01-02", key)
+	for dateKey := range dailyTimeSeries {
+		date, err := time.Parse("2006-01-02", dateKey)
 		if err != nil {
 			return nil, err
 		}
-		dayValues := dailyTimeSeries[key].(map[string]interface{})
+		dayValues := dailyTimeSeries[dateKey].(map[string]interface{})
 		v, err := strconv.Atoi(dayValues["5. volume"].(string))
 		if err != nil {
 			return nil, err
 		}
-		day := Day{
+		day := Candle{
 			Date:   date,
-			Open:   GetFloatValue(dayValues["1. open"]),
-			High:   GetFloatValue(dayValues["2. high"]),
-			Low:    GetFloatValue(dayValues["3. low"]),
-			Close:  GetFloatValue(dayValues["4. close"]),
+			Open:   GetFloatValue(dayValues["1. open"].(string)),
+			High:   GetFloatValue(dayValues["2. high"].(string)),
+			Low:    GetFloatValue(dayValues["3. low"].(string)),
+			Close:  GetFloatValue(dayValues["4. close"].(string)),
 			Volume: v,
 		}
 		days = append(days, day)
@@ -95,7 +90,8 @@ func ScrapJsonBody(body string) ([]Day, error) {
 	return days, nil
 }
 
-func GetFloatValue(valueI interface{}) float64 {
-	valueF, _ := strconv.ParseFloat(valueI.(string), 64)
+//Вспомогательный метод превращающий цены в формате String в цены в формате Float64
+func GetFloatValue(valueS string) float64 {
+	valueF, _ := strconv.ParseFloat(valueS, 64)
 	return valueF
 }
