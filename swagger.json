@@ -117,8 +117,8 @@
         }
       }
     },
-    "/writedb?symbol='symbolName'&user='userName'": {
-      "get": {
+    "/db?symbol='symbolName'&user='userName'": {
+      "post": {
         "summary": "write information about user request into database.",
         "parameters": [
           {
@@ -142,51 +142,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "400": {
-            "description": "Error"
-          }
-        }
-      }
-    },
-    "/readedb?user='userName'": {
-      "get": {
-        "summary": "return information about user requests.",
-        "parameters": [
-          {
-            "name": "userName",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "Username of sender"
-          },
-          {
-            "name": "symbolName",
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "description": "Stock Symbol of company you want to search"
-          }
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "List of news.",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "userID": {
-                  "type": "string",
-                  "example": "User1"
-                },
-                "stockKey": {
-                  "type": "string",
-                  "example": "IBM"
-                }
-              }
-            }
           },
           "400": {
             "description": "Error"
