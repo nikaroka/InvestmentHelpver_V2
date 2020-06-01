@@ -98,7 +98,11 @@ func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWrit
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
+		return
+	}
 }
 
 //Метод обрабатывающий запросы на получение графика, вызывает внутри себя метод GetPlot и отправляет полученый список свечей в виде Json
@@ -121,7 +125,11 @@ func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWrit
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(jsonData)
+	_, err = w.Write(jsonData)
+	if err != nil {
+		server.ErrorHandler(http.StatusInternalServerError, r, w)
+		return
+	}
 }
 
 //Метод обрабатывающий запросы на работу с базой данных, вызывает внутри себя метод AddHistory и отправляет статус 200
@@ -184,5 +192,10 @@ func main() {
 	fmt.Println("GO")
 	localPort := ":" + loadConfig().LocalPort
 	http.HandleFunc("/", mainHandler)
-	http.ListenAndServe(localPort, nil)
+	err := http.ListenAndServe(localPort, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 }
