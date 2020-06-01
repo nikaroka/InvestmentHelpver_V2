@@ -72,17 +72,22 @@ func ScrapJsonBody(body string) ([]Candle, error) {
 			return nil, err
 		}
 		dayValues := dailyTimeSeries[dateKey].(map[string]interface{})
-		v, err := strconv.Atoi(dayValues["5. volume"].(string))
+		value, err := strconv.Atoi(dayValues["5. volume"].(string))
+		if err != nil {
+			return nil, err
+		}
+		prices, err := GetFloatPrices(dayValues["1. open"].(string), dayValues["2. high"].(string),
+			dayValues["3. low"].(string), dayValues["4. close"].(string))
 		if err != nil {
 			return nil, err
 		}
 		day := Candle{
 			Date:   date,
-			Open:   GetFloatValue(dayValues["1. open"].(string)),
-			High:   GetFloatValue(dayValues["2. high"].(string)),
-			Low:    GetFloatValue(dayValues["3. low"].(string)),
-			Close:  GetFloatValue(dayValues["4. close"].(string)),
-			Volume: v,
+			Open:   prices[0],
+			High:   prices[1],
+			Low:    prices[2],
+			Close:  prices[3],
+			Volume: value,
 		}
 		days = append(days, day)
 	}
@@ -91,7 +96,23 @@ func ScrapJsonBody(body string) ([]Candle, error) {
 }
 
 //Вспомогательный метод превращающий цены в формате String в цены в формате Float64
-func GetFloatValue(valueS string) float64 {
-	valueF, _ := strconv.ParseFloat(valueS, 64)
-	return valueF
+func GetFloatPrices(openS string, highS string, lowS string, closeS string) ([]float64, error) {
+	openF, err := strconv.ParseFloat(openS, 64)
+	if err != nil {
+		return nil, err
+	}
+	highF, err := strconv.ParseFloat(highS, 64)
+	if err != nil {
+		return nil, err
+	}
+	lowF, err := strconv.ParseFloat(lowS, 64)
+	if err != nil {
+		return nil, err
+	}
+	closeF, err := strconv.ParseFloat(closeS, 64)
+	if err != nil {
+		return nil, err
+	}
+	preces := []float64{openF, highF, lowF, closeF}
+	return preces, nil
 }
