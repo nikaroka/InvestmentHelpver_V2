@@ -45,37 +45,37 @@ type News struct {
 //и возвращать список новостей в виде списка экземпляров структуры News
 //(Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
 type NewsManager interface {
-	GetNews(string) ([]News, error)
+	GetNews(string) ([]News, error) // принимает символ финансового актива, возвращать список новостей в виде списка экземпляров структуры News
 }
 
 ////Структура Candle (японская свеча) содержит дату, объем торгов в момент этой даты, а также информацию о цене в этот момент
 type Candle struct {
-	Date   time.Time
-	Open   float64
-	High   float64
-	Low    float64
-	Close  float64
-	Volume int
+	Date   time.Time // время в момент которого сущестует свеча, формат yyyy-mm-dd, время по ETS
+	Open   float64   // цена открытия
+	High   float64   // наивысшая цена
+	Low    float64   // наименьшая цена
+	Close  float64   // цена закрытия
+	Volume int       // объем торгов
 }
 
 //интерфейс менеджера графиков, реализующие его струтуры должны иметь метод получающий символ финансового актива
 //и возвращать список свечей в виде списка экземпляров структуры Candle
 //(Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
 type PlotManager interface {
-	GetPlot(string) ([]Candle, error)
+	GetPlot(string) ([]Candle, error) // принимает символ финансового актива, возвращать список свечей в виде списка экземпляров структуры Candle
 }
 
 //Структура UserRequest содержит ID пользователя и символ финансового актива информацию по которому он запрашивал
 type UserRequest struct {
-	UserID   string `bson:"userID,omitempty"`
-	StockKey string `bson:"stockKey,omitempty"`
+	UserID      string `bson:"userID,omitempty"`   // индентификатор пользователя в системе
+	StockSymbol string `bson:"stockKey,omitempty"` // символ акции
 }
 
 //интерфейс менеджера графиков, реализующие его струтуры должны иметь метод GetHistory принимающий ID пользователя и возвращающий историю его запросов в виде списка экземпляров UserRequest
 //и метод AddHistory принимающий ID пользователя и символ финансового актива, и записыющий эту информацию в базу данных
 type DBManager interface {
-	GetHistory(string) ([]UserRequest, error)
-	AddHistory(string, string) error
+	GetHistory(string) ([]UserRequest, error) // принимает ID пользователя, возвращает историю его запросов в виде списка экземпляров UserRequest
+	AddHistory(string, string) error          // принимает ID пользователя и символ финансового актива, записывает эту информацию в базу данных
 }
 
 //Метод обрабатывающий запросы на получение новостей, вызывает внутри себя метод GetNews и отправляет полученый список новостей в виде Json
