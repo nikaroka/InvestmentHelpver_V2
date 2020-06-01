@@ -113,6 +113,6 @@ func GetFloatPrices(openS string, highS string, lowS string, closeS string) ([]f
 	if err != nil {
 		return nil, err
 	}
-	preces := []float64{openF, highF, lowF, closeF}
-	return preces, nil
+	prices := []float64{openF, highF, lowF, closeF}
+	return prices, nil
 }
