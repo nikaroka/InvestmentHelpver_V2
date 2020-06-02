@@ -1,4 +1,4 @@
-package main
+package plot
 
 import (
 	"encoding/json"
@@ -12,14 +12,37 @@ import (
 	"time"
 )
 
+//Структура Candle (японская свеча) содержит дату, объем торгов в момент этой даты, а также информацию о цене в этот момент
+type Candle struct {
+	Date   time.Time // время в момент которого сущестует свеча, формат yyyy-mm-dd, время по ETS
+	Open   float64   // цена открытия
+	High   float64   // наивысшая цена
+	Low    float64   // наименьшая цена
+	Close  float64   // цена закрытия
+	Volume int       // объем торгов
+}
+
+//интерфейс менеджера графиков, реализующие его струтуры должны иметь метод получающий символ финансового актива
+//и возвращать список свечей в виде списка экземпляров структуры Candle
+//(Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
+type PlotManager interface {
+	GetPlot(string) ([]Candle, error) // принимает символ финансового актива, возвращать список свечей в виде списка экземпляров структуры Candle
+}
+
 //Реализация интерфейса PlotManager, имеет параметр apiKey являющийся клюом к API Alpha Ventage
 type PlotManagerAlphaVantage struct {
-	apiKey string
+	ApiKey string
+}
+
+//Конструктор для структуры PlotManagerAlphaVantage
+func NewPlotManagerAlphaVantage(apiKey string) PlotManager {
+	plotManager := PlotManagerAlphaVantage{apiKey}
+	return plotManager
 }
 
 //Метод структуры PlotManagerAlphaVantage, принимает символ финансового актива, возвращает список экземпляров структуры Candle
 func (plotManager PlotManagerAlphaVantage) GetPlot(symbol string) ([]Candle, error) {
-	apiKey := plotManager.apiKey
+	apiKey := plotManager.ApiKey
 	body, err := GetPlotJson(symbol, apiKey)
 	if err != nil {
 		return nil, err

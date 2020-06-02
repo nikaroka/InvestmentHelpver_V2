@@ -1,11 +1,13 @@
 package main
 
 import (
+	"InvestmentHelpver_V2/db"
+	"InvestmentHelpver_V2/news"
+	"InvestmentHelpver_V2/plot"
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/configor"
 	"net/http"
-	"time"
 )
 
 //Структура отражающая config.yml
@@ -16,9 +18,8 @@ type Config struct {
 		CollectionTest string `default:"dbCollectionTest"`
 		Server         string `default:"dbServer"`
 	}
-	VentageKey     string `default:"key"`
-	VentageKeyTest string `default:"keytest"`
-	LocalPort      string `default:"8888"`
+	VentageKey string `default:"key"`
+	LocalPort  string `default:"8888"`
 }
 
 //Метод считывающий config.yml и возвращающий его содержимое в экземпляре структуры Config
@@ -30,58 +31,15 @@ func loadConfig() Config {
 
 //Главная структура программы включающая в себя интерфейсы основных модулей(менеджеров)
 type InvestmentServer struct {
-	newsManager NewsManager
-	plotManager PlotManager
-	dbManager   DBManager
-}
-
-//Структура News содержит заголовок новости и ссылку на источник с полным текстом
-type News struct {
-	Headline string
-	Link     string
-}
-
-//интерфейс менеджера новостей, реализующие его струтуры должны иметь метод получающий символ финансового актива
-//и возвращать список новостей в виде списка экземпляров структуры News
-//(Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
-type NewsManager interface {
-	GetNews(string) ([]News, error) // принимает символ финансового актива, возвращать список новостей в виде списка экземпляров структуры News
-}
-
-////Структура Candle (японская свеча) содержит дату, объем торгов в момент этой даты, а также информацию о цене в этот момент
-type Candle struct {
-	Date   time.Time // время в момент которого сущестует свеча, формат yyyy-mm-dd, время по ETS
-	Open   float64   // цена открытия
-	High   float64   // наивысшая цена
-	Low    float64   // наименьшая цена
-	Close  float64   // цена закрытия
-	Volume int       // объем торгов
-}
-
-//интерфейс менеджера графиков, реализующие его струтуры должны иметь метод получающий символ финансового актива
-//и возвращать список свечей в виде списка экземпляров структуры Candle
-//(Tesla - название компании, TSLA - символ акций (финансового актива) этой компании на рынке)
-type PlotManager interface {
-	GetPlot(string) ([]Candle, error) // принимает символ финансового актива, возвращать список свечей в виде списка экземпляров структуры Candle
-}
-
-//Структура UserRequest содержит ID пользователя и символ финансового актива информацию по которому он запрашивал
-type UserRequest struct {
-	UserID      string `bson:"userID,omitempty"`   // индентификатор пользователя в системе
-	StockSymbol string `bson:"stockKey,omitempty"` // символ акции
-}
-
-//интерфейс менеджера графиков, реализующие его струтуры должны иметь метод GetHistory принимающий ID пользователя и возвращающий историю его запросов в виде списка экземпляров UserRequest
-//и метод AddHistory принимающий ID пользователя и символ финансового актива, и записыющий эту информацию в базу данных
-type DBManager interface {
-	GetHistory(string) ([]UserRequest, error) // принимает ID пользователя, возвращает историю его запросов в виде списка экземпляров UserRequest
-	AddHistory(string, string) error          // принимает ID пользователя и символ финансового актива, записывает эту информацию в базу данных
+	NewsManager news.NewsManager
+	PlotManager plot.PlotManager
+	DBManager   db.DBManager
 }
 
 //Метод обрабатывающий запросы на получение новостей, вызывает внутри себя метод GetNews и отправляет полученый список новостей в виде Json
 func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWriter) {
 	symbol := r.URL.Query()["symbol"][0]
-	news, err := server.newsManager.GetNews(symbol)
+	news, err := server.NewsManager.GetNews(symbol)
 	if err != nil {
 		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
@@ -108,7 +66,7 @@ func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWrit
 //Метод обрабатывающий запросы на получение графика, вызывает внутри себя метод GetPlot и отправляет полученый список свечей в виде Json
 func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWriter) {
 	symbol := r.URL.Query()["symbol"][0]
-	plot, err := server.plotManager.GetPlot(symbol)
+	plot, err := server.PlotManager.GetPlot(symbol)
 	if err != nil {
 		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
@@ -137,7 +95,7 @@ func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWrit
 func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter) {
 	user := r.URL.Query()["user"][0]
 	symbol := r.URL.Query()["symbol"][0]
-	err := server.dbManager.AddHistory(user, symbol)
+	err := server.DBManager.AddHistory(user, symbol)
 	if err != nil {
 		server.ErrorHandler(http.StatusInternalServerError, r, w)
 		return
@@ -162,11 +120,9 @@ func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w 
 }
 
 //Создаем экземпляры реализаций интерфейсов сервера, затем создаем экземпляр самого сервера с этими реализациями
-var newsManager = NewsManagerYahoo{}
-var plotManager = PlotManagerAlphaVantage{apiKey: loadConfig().VentageKey}
-var dbManager = DBManagerMongo{dbName: loadConfig().DBConfig.Name,
-	collectionName: loadConfig().DBConfig.Collection,
-	dbServer:       loadConfig().DBConfig.Server}
+var newsManager = news.NewNewsManagerYahoo()
+var plotManager = plot.NewPlotManagerAlphaVantage(loadConfig().VentageKey)
+var dbManager = db.NewDBManagerMongo(loadConfig().DBConfig.Name, loadConfig().DBConfig.Collection, loadConfig().DBConfig.Server)
 var server = InvestmentServer{newsManager, plotManager, dbManager}
 
 //Главный обработчик, вызывается при получении запроса на сервер, решает какой из Handler-ов должен этот запрос обработать
@@ -197,5 +153,4 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
 }

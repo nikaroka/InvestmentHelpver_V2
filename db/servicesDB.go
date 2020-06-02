@@ -1,4 +1,4 @@
-package main
+package db
 
 import (
 	"context"
@@ -7,18 +7,37 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+//Структура UserRequest содержит ID пользователя и символ финансового актива информацию по которому он запрашивал
+type UserRequest struct {
+	UserID      string `bson:"userID,omitempty"`   // индентификатор пользователя в системе
+	StockSymbol string `bson:"stockKey,omitempty"` // символ акции
+}
+
+//интерфейс менеджера графиков, реализующие его струтуры должны иметь метод GetHistory принимающий ID пользователя и возвращающий историю его запросов в виде списка экземпляров UserRequest
+//и метод AddHistory принимающий ID пользователя и символ финансового актива, и записыющий эту информацию в базу данных
+type DBManager interface {
+	GetHistory(string) ([]UserRequest, error) // принимает ID пользователя, возвращает историю его запросов в виде списка экземпляров UserRequest
+	AddHistory(string, string) error          // принимает ID пользователя и символ финансового актива, записывает эту информацию в базу данных
+}
+
 //Реализация интерфейса DBManager, отвечает за работу с MonboDB, имеет параметры
-//dbName - имя базы данных, collectionName - имя колекции, dbServer - сервер базы данных
+//DBName - имя базы данных, CollectionName - имя колекции, DBServer - сервер базы данных
 type DBManagerMongo struct {
-	dbName         string
-	collectionName string
-	dbServer       string
+	DBName         string
+	CollectionName string
+	DBServer       string
+}
+
+//Конструктор для структуры DBManagerMongo
+func NewDBManagerMongo(dbName string, collectionName string, dbServer string) DBManager {
+	dbManager := DBManagerMongo{dbName, collectionName, dbServer}
+	return dbManager
 }
 
 //Метод структуры DBManagerMongo, принимает ID пользователя, возвращает список экземпляров структуры UserRequest
 func (dbManager DBManagerMongo) GetHistory(userID string) ([]UserRequest, error) {
 	var userRequests []UserRequest
-	dbName, collectionName, dbServer := dbManager.dbName, dbManager.collectionName, dbManager.dbServer
+	dbName, collectionName, dbServer := dbManager.DBName, dbManager.CollectionName, dbManager.DBServer
 	collection, client, err := GetCollection(dbName, collectionName, dbServer)
 	if err != nil {
 		return nil, err
@@ -42,7 +61,7 @@ func (dbManager DBManagerMongo) GetHistory(userID string) ([]UserRequest, error)
 
 //Метод структуры DBManagerMongo, принимает ID пользователя и символ финансового актива, возвращает ошибку если она есть
 func (dbManager DBManagerMongo) AddHistory(userID string, symbol string) error {
-	dbName, collectionName, dbServer := dbManager.dbName, dbManager.collectionName, dbManager.dbServer
+	dbName, collectionName, dbServer := dbManager.DBName, dbManager.CollectionName, dbManager.DBServer
 	collection, client, err := GetCollection(dbName, collectionName, dbServer)
 	if err != nil {
 		return err
