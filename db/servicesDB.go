@@ -20,31 +20,26 @@ type DBManager interface {
 	AddHistory(string, string) error          // принимает ID пользователя и символ финансового актива, записывает эту информацию в базу данных
 }
 
-//Реализация интерфейса DBManager, отвечает за работу с MonboDB, имеет параметры
-//DBName - имя базы данных, CollectionName - имя колекции, DBServer - сервер базы данных
+//Реализация интерфейса DBManager, отвечает за работу с MonboDB
 type DBManagerMongo struct {
-	DBName         string
-	CollectionName string
-	DBServer       string
+	DBCollection *mongo.Collection //коллекция mongodb в которую записываются данные
+	DBCliet      *mongo.Client     //подключение к коллекции
 }
 
 //Конструктор для структуры DBManagerMongo
 func NewDBManagerMongo(dbName string, collectionName string, dbServer string) DBManager {
-	dbManager := DBManagerMongo{dbName, collectionName, dbServer}
+	collection, client, err := GetCollection(dbName, collectionName, dbServer)
+	dbManager := DBManagerMongo{collection, client}
+	if err != nil {
+		return nil
+	}
 	return dbManager
 }
 
 //Метод структуры DBManagerMongo, принимает ID пользователя, возвращает список экземпляров структуры UserRequest
 func (dbManager DBManagerMongo) GetHistory(userID string) ([]UserRequest, error) {
 	var userRequests []UserRequest
-	dbName, collectionName, dbServer := dbManager.DBName, dbManager.CollectionName, dbManager.DBServer
-	collection, client, err := GetCollection(dbName, collectionName, dbServer)
-	if err != nil {
-		return nil, err
-	}
-	defer client.Disconnect(context.TODO())
-
-	cur, err := collection.Find(context.TODO(), bson.M{"userID": userID})
+	cur, err := dbManager.DBCollection.Find(context.TODO(), bson.M{"userID": userID})
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +56,8 @@ func (dbManager DBManagerMongo) GetHistory(userID string) ([]UserRequest, error)
 
 //Метод структуры DBManagerMongo, принимает ID пользователя и символ финансового актива, возвращает ошибку если она есть
 func (dbManager DBManagerMongo) AddHistory(userID string, symbol string) error {
-	dbName, collectionName, dbServer := dbManager.DBName, dbManager.CollectionName, dbManager.DBServer
-	collection, client, err := GetCollection(dbName, collectionName, dbServer)
-	if err != nil {
-		return err
-	}
-	defer client.Disconnect(context.TODO())
 	userReq := UserRequest{userID, symbol}
-	_, err = collection.InsertOne(context.TODO(), userReq)
+	_, err := dbManager.DBCollection.InsertOne(context.TODO(), userReq)
 	if err != nil {
 		return err
 	}

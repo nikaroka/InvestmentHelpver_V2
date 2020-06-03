@@ -9,7 +9,7 @@ func TestGetPlotAlphaVantage(t *testing.T) {
 	testSymbolReal := "IBM"
 	testSymbolUnreal := "unrealSymbol"
 	apiKey := "FUSAUHUZ3W0NG9V0"
-	plotManagerTest := PlotManagerAlphaVantage{apiKey}
+	plotManagerTest := NewPlotManagerAlphaVantage(apiKey)
 
 	t.Run(fmt.Sprintf("test real stock symbol:%s", testSymbolReal), func(t *testing.T) {
 		plot, err := plotManagerTest.GetPlot(testSymbolReal)

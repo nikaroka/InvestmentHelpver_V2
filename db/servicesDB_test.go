@@ -9,7 +9,7 @@ func TestMongoDB(t *testing.T) {
 	testSymbol := "IBM"
 	testUser := "TestUser"
 	dbName, collectionNameTest, mongoServer := "InvestmentHelper", "CollectionTest", "mongodb://127.0.0.1:27017"
-	dbManagerTest := DBManagerMongo{dbName, collectionNameTest, mongoServer}
+	dbManagerTest := NewDBManagerMongo(dbName, collectionNameTest, mongoServer)
 	t.Run(fmt.Sprintf("test add history"), func(t *testing.T) {
 		err := dbManagerTest.AddHistory(testUser, testSymbol)
 		if err != nil {

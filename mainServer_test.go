@@ -16,7 +16,7 @@ var testUser = "userTest"
 
 func TestNewsHandler(t *testing.T) {
 	newsManagerYahoo := news.NewNewsManagerYahoo()
-	serverYahoo := InvestmentServer{newsManagerYahoo, nil, nil}
+	serverYahoo := NewInvestmentServer(newsManagerYahoo, nil, nil)
 
 	t.Run(fmt.Sprintf("test response 200 newsManagerYahoo"), func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news?symbol=%s", testSymbolReal), nil)
@@ -42,7 +42,7 @@ func TestNewsHandler(t *testing.T) {
 func TestPlotHandler(t *testing.T) {
 	apiKey := loadConfig().VentageKey
 	plotManagerAlphaVentage := plot.NewPlotManagerAlphaVantage(apiKey)
-	serverAlphaVentage := InvestmentServer{nil, plotManagerAlphaVentage, nil}
+	serverAlphaVentage := NewInvestmentServer(nil, plotManagerAlphaVentage, nil)
 
 	t.Run(fmt.Sprintf("test response 200 plotManagerAlphaVentage"), func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news?symbol=%s", testSymbolReal), nil)
@@ -67,7 +67,7 @@ func TestPlotHandler(t *testing.T) {
 
 func TestDBHandler(t *testing.T) {
 	dbManagerMongo := db.NewDBManagerMongo(loadConfig().DBConfig.Name, loadConfig().DBConfig.CollectionTest, loadConfig().DBConfig.Server)
-	serverDBManagerMongo := InvestmentServer{nil, nil, dbManagerMongo}
+	serverDBManagerMongo := NewInvestmentServer(nil, nil, dbManagerMongo)
 
 	t.Run(fmt.Sprintf("test response 200 dbManagerMongo"), func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/db?symbol=%s&user=%s", testSymbolReal, testUser), nil)

@@ -8,7 +8,7 @@ import (
 func TestGetNewsYahoo(t *testing.T) {
 	testSymbolReal := "IBM"
 	testSymbolUnreal := "unrealSymbol"
-	newsManagerTest := NewsManagerYahoo{}
+	newsManagerTest := NewNewsManagerYahoo()
 	t.Run(fmt.Sprintf("test real stock symbol:%s", testSymbolReal), func(t *testing.T) {
 		news, err := newsManagerTest.GetNews(testSymbolReal)
 		if err != nil {

@@ -36,6 +36,10 @@ type InvestmentServer struct {
 	DBManager   db.DBManager
 }
 
+func NewInvestmentServer(NewsManager news.NewsManager, PlotManager plot.PlotManager, DBManager db.DBManager) InvestmentServer {
+	return InvestmentServer{NewsManager, PlotManager, DBManager}
+}
+
 //Метод обрабатывающий запросы на получение новостей, вызывает внутри себя метод GetNews и отправляет полученый список новостей в виде Json
 func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWriter) {
 	symbol := r.URL.Query()["symbol"][0]
@@ -123,7 +127,7 @@ func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w 
 var newsManager = news.NewNewsManagerYahoo()
 var plotManager = plot.NewPlotManagerAlphaVantage(loadConfig().VentageKey)
 var dbManager = db.NewDBManagerMongo(loadConfig().DBConfig.Name, loadConfig().DBConfig.Collection, loadConfig().DBConfig.Server)
-var server = InvestmentServer{newsManager, plotManager, dbManager}
+var server = NewInvestmentServer(newsManager, plotManager, dbManager)
 
 //Главный обработчик, вызывается при получении запроса на сервер, решает какой из Handler-ов должен этот запрос обработать
 func mainHandler(w http.ResponseWriter, r *http.Request) {
