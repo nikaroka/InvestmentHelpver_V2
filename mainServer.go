@@ -49,7 +49,7 @@ func (server *InvestmentServer) NewsHandler(r *http.Request, w http.ResponseWrit
 		return
 	}
 	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
+	if origin, ok := r.Header["Origin"]; ok {
 		pageServer = origin[0]
 	}
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
@@ -76,7 +76,7 @@ func (server *InvestmentServer) PlotHandler(r *http.Request, w http.ResponseWrit
 		return
 	}
 	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
+	if origin, ok := r.Header["Origin"]; ok {
 		pageServer = origin[0]
 	}
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
@@ -105,7 +105,7 @@ func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter
 		return
 	}
 	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
+	if origin, ok := r.Header["Origin"]; ok {
 		pageServer = origin[0]
 	}
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)
@@ -116,7 +116,7 @@ func (server *InvestmentServer) DBHandler(r *http.Request, w http.ResponseWriter
 //используется в остальных Handler-ах
 func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w http.ResponseWriter) {
 	pageServer := ""
-	if origin, ok := r.Header["Origin"]; ok == true {
+	if origin, ok := r.Header["Origin"]; ok {
 		pageServer = origin[0]
 	}
 	w.Header().Set("Access-Control-Allow-Origin", pageServer)

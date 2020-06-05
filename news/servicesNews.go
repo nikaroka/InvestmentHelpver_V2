@@ -45,10 +45,10 @@ func (newsManager NewsManagerYahoo) GetNews(symbol string) ([]News, error) {
 	news := []News{}
 	html.Find("a").Each(func(i int, selection *goquery.Selection) {
 		isBox := selection.Children().HasClass("StretchedBox")
-		if isBox == true {
+		if isBox {
 			headline := selection.Text()
 			link, _ := selection.Attr("href")
-			if strings.Index(link, "http") == -1 {
+			if !strings.Contains(link, "http") {
 				link = "https://finance.yahoo.com" + link
 			}
 			news = append(news, News{headline, link})

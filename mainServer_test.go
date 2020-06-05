@@ -18,7 +18,7 @@ func TestNewsHandler(t *testing.T) {
 	newsManagerYahoo := news.NewNewsManagerYahoo()
 	serverYahoo := NewInvestmentServer(newsManagerYahoo, nil, nil)
 
-	t.Run(fmt.Sprintf("test response 200 newsManagerYahoo"), func(t *testing.T) {
+	t.Run("test response 200 newsManagerYahoo", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news?symbol=%s", testSymbolReal), nil)
 		response := httptest.NewRecorder()
 		serverYahoo.NewsHandler(request, response)
@@ -28,7 +28,7 @@ func TestNewsHandler(t *testing.T) {
 		}
 	})
 
-	t.Run(fmt.Sprintf("test response 500 newsManagerYahoo"), func(t *testing.T) {
+	t.Run("test response 500 newsManagerYahoo", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news?symbol=%s", testSymbolUnreal), nil)
 		response := httptest.NewRecorder()
 		serverYahoo.NewsHandler(request, response)
