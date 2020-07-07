@@ -1,12 +1,12 @@
 package main
 
 import (
-	"InvestmentHelpver_V2/db"
-	"InvestmentHelpver_V2/news"
-	"InvestmentHelpver_V2/plot"
+	"InvestmentHelpver_V2/internal/db"
+	"InvestmentHelpver_V2/internal/news"
+	"InvestmentHelpver_V2/internal/plot"
 	"encoding/json"
-	"fmt"
 	"github.com/jinzhu/configor"
+	"log"
 	"net/http"
 )
 
@@ -25,7 +25,7 @@ type Config struct {
 //Метод считывающий config.yml и возвращающий его содержимое в экземпляре структуры Config
 func loadConfig() Config {
 	var config Config
-	configor.Load(&config, "config.yml")
+	configor.Load(&config, "config/config.yml")
 	return config
 }
 
@@ -134,27 +134,27 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	command := r.URL.EscapedPath()
 	switch {
 	case command == "/db":
-		fmt.Println("db")
+		log.Printf("%s\n", "db")
 		server.DBHandler(r, w)
 	case command == "/news":
-		fmt.Println("news")
+		log.Printf("%s\n", "news")
 		server.NewsHandler(r, w)
 	case command == "/plot":
-		fmt.Println("plot")
+		log.Printf("%s\n", "plot")
 		server.PlotHandler(r, w)
 	default:
-		fmt.Println("wrong command")
+		log.Printf("%s\n", "wrong command")
 		server.ErrorHandler(http.StatusBadRequest, r, w)
 	}
 }
 
 func main() {
-	fmt.Println("GO")
 	localPort := ":" + loadConfig().LocalPort
 	http.HandleFunc("/", mainHandler)
+	log.Printf("%s\n", "Server is Up")
 	err := http.ListenAndServe(localPort, nil)
 	if err != nil {
-		fmt.Println(err)
+		log.Print(err)
 		return
 	}
 }

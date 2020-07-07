@@ -1,9 +1,9 @@
 package main
 
 import (
-	"InvestmentHelpver_V2/db"
-	"InvestmentHelpver_V2/news"
-	"InvestmentHelpver_V2/plot"
+	"InvestmentHelpver_V2/internal/db"
+	"InvestmentHelpver_V2/internal/news"
+	"InvestmentHelpver_V2/internal/plot"
 	"fmt"
 	"net/http"
 	"net/http/httptest"

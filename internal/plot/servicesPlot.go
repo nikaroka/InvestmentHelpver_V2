@@ -67,12 +67,12 @@ func GetPlotJson(symbol string, apiKey string) (string, error) {
 		return "", err
 	}
 
-	if !strings.Contains(string(body), "Note") {
+	if strings.Contains(string(body), "Note") {
 		err = errors.New("exceedApiFrequency")
 		return "", err
 	}
 
-	if !strings.Contains(string(body), "Invalid API call") {
+	if strings.Contains(string(body), "Invalid API call") {
 		err = errors.New("wrongSymbolApiCall")
 		return "", err
 	}
