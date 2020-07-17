@@ -44,7 +44,7 @@ func TestPlotHandler(t *testing.T) {
 	plotManagerAlphaVentage := plot.NewPlotManagerAlphaVantage(apiKey)
 	serverAlphaVentage := NewInvestmentServer(nil, plotManagerAlphaVentage, nil)
 
-	t.Run(fmt.Sprintf("test response 200 plotManagerAlphaVentage"), func(t *testing.T) {
+	t.Run("test response 200 plotManagerAlphaVentage", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news?symbol=%s", testSymbolReal), nil)
 		response := httptest.NewRecorder()
 		serverAlphaVentage.PlotHandler(request, response)
@@ -54,7 +54,7 @@ func TestPlotHandler(t *testing.T) {
 		}
 	})
 
-	t.Run(fmt.Sprintf("test response 500 plotManagerAlphaVentage"), func(t *testing.T) {
+	t.Run("test response 500 plotManagerAlphaVentage", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news?symbol=%s", testSymbolUnreal), nil)
 		response := httptest.NewRecorder()
 		serverAlphaVentage.PlotHandler(request, response)
@@ -69,7 +69,7 @@ func TestDBHandler(t *testing.T) {
 	dbManagerMongo := db.NewDBManagerMongo(loadConfig().DBConfig.Name, loadConfig().DBConfig.CollectionTest, loadConfig().DBConfig.Server)
 	serverDBManagerMongo := NewInvestmentServer(nil, nil, dbManagerMongo)
 
-	t.Run(fmt.Sprintf("test response 200 dbManagerMongo"), func(t *testing.T) {
+	t.Run("test response 200 dbManagerMongo", func(t *testing.T) {
 		request := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/db?symbol=%s&user=%s", testSymbolReal, testUser), nil)
 		response := httptest.NewRecorder()
 		serverDBManagerMongo.DBHandler(request, response)
