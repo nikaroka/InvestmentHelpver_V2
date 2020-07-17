@@ -2,8 +2,8 @@ dbconfig:
   name: "InvestmentHelper"
   collection: "History"
   collectiontest: "TestCollection"
-  #server: "mongodb://127.0.0.1:27017" #localmongo
-  server: "mongodb://mongodb:27017" #docker
+  server: "mongodb://127.0.0.1:27017" #localmongo
+  #dbserver: "mongodb://mongodb:27017" #docker
 
 ventagekey: "RFQVPDIH6W9SQV2O"
 

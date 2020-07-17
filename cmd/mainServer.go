@@ -4,6 +4,7 @@ import (
 	"InvestmentHelpver_V2/internal/db"
 	"InvestmentHelpver_V2/internal/news"
 	"InvestmentHelpver_V2/internal/plot"
+	"os"
 
 	"github.com/jinzhu/configor"
 
@@ -18,7 +19,7 @@ type Config struct {
 		Name           string `default:"dbName"`
 		Collection     string `default:"dbCollection"`
 		CollectionTest string `default:"dbCollectionTest"`
-		Server         string `default:"dbServer"`
+		DBserver       string `default:"dbServer"`
 	}
 	VentageKey string `default:"key"`
 	LocalPort  string `default:"8888"`
@@ -26,8 +27,15 @@ type Config struct {
 
 // Метод считывающий config.yml и возвращающий его содержимое в экземпляре структуры Config
 func loadConfig() Config {
-	var config Config
-	configor.Load(&config, "config/config.yml")
+	config := Config{}
+	err := configor.Load(&config, "config.yml")
+	if err != nil {
+		panic(err)
+	}
+	dbServer, ok := os.LookupEnv("dbserver")
+	if ok {
+		config.DBConfig.DBserver = dbServer
+	}
 	return config
 }
 
@@ -128,7 +136,7 @@ func (server *InvestmentServer) ErrorHandler(httpStatus int, r *http.Request, w 
 // Создаем экземпляры реализаций интерфейсов сервера, затем создаем экземпляр самого сервера с этими реализациями
 var newsManager = news.NewNewsManagerYahoo()
 var plotManager = plot.NewPlotManagerAlphaVantage(loadConfig().VentageKey)
-var dbManager = db.NewDBManagerMongo(loadConfig().DBConfig.Name, loadConfig().DBConfig.Collection, loadConfig().DBConfig.Server)
+var dbManager = db.NewDBManagerMongo(loadConfig().DBConfig.Name, loadConfig().DBConfig.Collection, loadConfig().DBConfig.DBserver)
 var server = NewInvestmentServer(newsManager, plotManager, dbManager)
 
 // Главный обработчик, вызывается при получении запроса на сервер, решает какой из Handler-ов должен этот запрос обработать

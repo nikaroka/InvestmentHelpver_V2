@@ -7,4 +7,4 @@ Requirements:
     <li>mongoDB version 4.2.6</li>
    </ul>
 <p>Front: https://github.com/Altnar/InvestmentHelpverFront/tree/master</p>
-<p>Uncomment localmongo server and comment docker server in config.yml if you want run InvestmentHelper with your local mongo client</p>
+<p>if you want to run it in docker add your DB server as environment variable "docker run -e mydbserver mydockerimage"</p>
