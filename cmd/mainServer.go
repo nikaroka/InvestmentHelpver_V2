@@ -4,6 +4,7 @@ import (
 	"InvestmentHelpver_V2/internal/db"
 	"InvestmentHelpver_V2/internal/news"
 	"InvestmentHelpver_V2/internal/plot"
+	"fmt"
 	"os"
 
 	"github.com/jinzhu/configor"
@@ -160,6 +161,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	localPort := ":" + loadConfig().LocalPort
+	fmt.Println("jok")
 	http.HandleFunc("/", mainHandler)
 	log.Printf("%s\n", "Server is Up")
 	err := http.ListenAndServe(localPort, nil)
